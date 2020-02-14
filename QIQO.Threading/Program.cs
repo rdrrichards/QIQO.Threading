@@ -10,7 +10,7 @@ namespace QIQO.Threading
         static void Main(string[] args)
         {
             Console.WriteLine("Let's do something with threads...");
-            Init();
+            Init().Wait();
             Console.ReadKey();
         }
         public static async Task<bool> Init()
