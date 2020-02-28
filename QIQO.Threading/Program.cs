@@ -10,7 +10,9 @@ namespace QIQO.Threading
         static void Main(string[] args)
         {
             Console.WriteLine("Let's do something with threads...");
-            Init().Wait();
+            // Init().Wait();
+            var aos = GetAnalysisOrdersToProcess().Result;
+            aos.ForEach(ao => { Console.WriteLine(ao.AnalysisOrderId); });
             Console.ReadKey();
         }
         public static async Task<bool> Init()
@@ -24,7 +26,7 @@ namespace QIQO.Threading
                 // tasks.Add(DoWorkAsync(i));
                 msgs.Add(new OMLMessage(i.ToString()));
             }
-            await ProcessMessages(msgs);
+            // await ProcessMessages(msgs);
             //foreach (var task in await Task.WhenAll(tasks))
             //{
             //    if (task.Item2)
@@ -34,7 +36,30 @@ namespace QIQO.Threading
             //}
             return true;
         }
+        public static async Task<List<AnalysisOrder>> GetAnalysisOrdersToProcess()
+        {
+            var statusList = new List<string>
+            {
+                "AnalysisOrderStatus.HoldBy3rdParty",
+                "AnalysisOrderStatus.HoldByAlissa",
+                "AnalysisOrderStatus.SubmittedTo3rdParty",
+                "AnalysisOrderStatus.SubmittedToAlissa",
+            };
 
+            var orders = new List<AnalysisOrder>();
+            var tasks = new List<Task<List<AnalysisOrder>>>();
+            statusList.ForEach(status =>
+            {
+                tasks.Add(GetAnalysisOrderList(null, status, 0));
+            });
+            var res = await Task.WhenAll(tasks);
+            res.ToList().ForEach(aos => { orders.AddRange(aos); });
+            return orders;
+        }
+        private static Task<List<AnalysisOrder>> GetAnalysisOrderList(object o, string s, int i)
+        {
+            return Task.FromResult(new List<AnalysisOrder> { new AnalysisOrder() });
+        }
         public static async Task<(int, bool)> DoWorkAsync(int i)
         {
             Console.WriteLine("working..{0}", i);
@@ -69,5 +94,9 @@ namespace QIQO.Threading
             Console.WriteLine($"Processing {_id}...");
             return this;
         }
+    }
+    class AnalysisOrder
+    {
+        public int AnalysisOrderId { get; set; } = DateTime.Now.GetHashCode();
     }
 }
